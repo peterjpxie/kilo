@@ -211,6 +211,9 @@ void disableRawMode(int fd) {
 
 /* Called at exit to avoid remaining in raw mode. */
 void editorAtExit(void) {
+    /* Clear the screen and reset cursor to home position */
+    write(STDOUT_FILENO, "\x1b[2J\x1b[H", 7);
+        
     disableRawMode(STDIN_FILENO);
 }
 
