@@ -123,6 +123,7 @@ enum KEY_ACTION{
         CTRL_Q = 17,        /* Ctrl-q */
         CTRL_S = 19,        /* Ctrl-s */
         CTRL_U = 21,        /* Ctrl-u */
+        CTRL_X = 24,        /* Ctrl-x */        
         ESC = 27,           /* Escape */
         BACKSPACE =  127,   /* Backspace */
         /* The following are just soft codes, not really reported by the
@@ -510,7 +511,7 @@ void editorUpdateSyntax(erow *row) {
         p++; i++;
     }
 
-    /* Propagate syntax change to the next row if the open commen
+    /* Propagate syntax change to the next row if the open comment
      * state changed. This may recursively affect all the following rows
      * in the file. */
     int oc = editorRowHasOpenComment(row);
@@ -519,16 +520,18 @@ void editorUpdateSyntax(erow *row) {
     row->hl_oc = oc;
 }
 
-/* Maps syntax highlight token types to terminal colors. */
+/* Maps syntax highlight token types to foreground terminal colors. 
+color ref: https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
+*/
 int editorSyntaxToColor(int hl) {
     switch(hl) {
     case HL_COMMENT:
     case HL_MLCOMMENT: return 36;     /* cyan */
-    case HL_KEYWORD1: return 33;    /* yellow */
-    case HL_KEYWORD2: return 32;    /* green */
-    case HL_STRING: return 35;      /* magenta */
-    case HL_NUMBER: return 31;      /* red */
-    case HL_MATCH: return 34;      /* blu */
+    // case HL_KEYWORD1: return 33;    /* yellow */
+    // case HL_KEYWORD2: return 34;      /* blue */ 
+    // case HL_STRING: return 35;      /* magenta */
+    // case HL_NUMBER: return 31;      /* red */
+    case HL_MATCH: return 32;    /* green */
     default: return 37;             /* white */
     }
 }
@@ -1187,7 +1190,7 @@ void editorMoveCursor(int key) {
 
 /* Process events arriving from the standard input, which is, the user
  * is typing stuff on the terminal. */
-#define KILO_QUIT_TIMES 3
+#define KILO_QUIT_TIMES 1
 void editorProcessKeypress(int fd) {
     /* When the file is modified, requires Ctrl-q to be pressed N times
      * before actually quitting. */
@@ -1215,6 +1218,10 @@ void editorProcessKeypress(int fd) {
     case CTRL_S:        /* Ctrl-s */
         editorSave();
         break;
+    case CTRL_X:        /* Ctrl-x */
+        editorSave();
+        exit(0);        
+        break;        
     case CTRL_F:
         editorFind(fd);
         break;
@@ -1302,7 +1309,7 @@ int main(int argc, char **argv) {
     editorOpen(argv[1]);
     enableRawMode(STDIN_FILENO);
     editorSetStatusMessage(
-        "HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-F = find");
+        "HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-X = save and quit | Ctrl-F = find");
     while(1) {
         editorRefreshScreen();
         editorProcessKeypress(STDIN_FILENO);
