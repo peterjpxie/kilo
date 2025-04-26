@@ -1017,9 +1017,18 @@ void editorSetStatusMessage(const char *fmt, ...) {
 
 #define KILO_QUERY_LEN 256
 
+static char last_search_query[KILO_QUERY_LEN+1] = {0};
+
 void editorFind(int fd) {
-    char query[KILO_QUERY_LEN+1] = {0};
+    char query[KILO_QUERY_LEN+1];
     int qlen = 0;
+    /* prefill query string to last successful query 
+        note that it does not perform query until you press a key like arrow.
+    */
+    strncpy(query, last_search_query, KILO_QUERY_LEN);
+    query[KILO_QUERY_LEN] = '\0';
+    qlen = strlen(query);
+
     int last_match = -1; /* Last line where a match was found. -1 for none. */
     int find_next = 0; /* if 1 search next, if -1 search prev. */
     int saved_hl_line = -1;  /* No saved HL */
@@ -1047,6 +1056,11 @@ void editorFind(int fd) {
             if (qlen != 0) query[--qlen] = '\0';
             last_match = -1;
         } else if (c == ESC || c == ENTER) {
+            if (qlen > 0) {
+                /* save last query */
+                strncpy(last_search_query, query, KILO_QUERY_LEN);                
+            }
+
             if (c == ESC) {
                 E.cx = saved_cx; E.cy = saved_cy;
                 E.coloff = saved_coloff; E.rowoff = saved_rowoff;
